@@ -13,6 +13,9 @@ Assignment: Assessment 3
 #include <vector>
 #include <cstdlib>
 #include <string>
+#include <stdexcept>
+#include <limits>
+#include <algorithm>
 
 // Declarations
 void clearScreen();
@@ -122,27 +125,140 @@ class ConservationNetworkGraph {
 
                     for (unsigned int k = 0; k < currentNodeEdges.size(); ++k) {
 
-                        const unsigned int& currentNodeNeighborIndex = k;
-                        const Edge& currentNodeNeighbor = currentNodeEdges.at(currentNodeNeighborIndex);
-                        const unsigned int& currentNodeNeighborIndex = currentNodeNeighbor.to;
+                        const Edge& edge = currentNodeEdges.at(k);
 
-                        if (currentOtherNodeIndex == currentNodeNeighborIndex) {
-                            currentNodeEdge = &currentNodeNeighbor;
+                        if (currentOtherNodeIndex == edge.to) {
+                            currentNodeEdge = &edge;
                             break;
                         };
+
                     };
 
                     if (currentNodeEdge != nullptr) {
                         const unsigned int& currentNodeEdgeWeight = currentNodeEdge->weight;
-                        output += std::to_string(currentNodeEdgeWeight) + '\t';
+                        output += std::to_string(currentNodeEdgeWeight) + "\t";
                     } else {
-                        output += '0' + '\t';
+                        output += "0\t";
                     };
 
                 };
+
+                output += '\n';
+
+            };
+
+            return output;
+
+        };
+
+        std::string BFSPath(
+            const unsigned int start
+        ) {
+
+            std::string output = "";
+
+            if (start >= adjList.size()) {
+                output = "Start index '" + std::to_string(start) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
+                return output;
+            };
+
+            std::queue<unsigned int> visiting;
+
+            bool visited[adjList.size()] = {};
+
+            for (unsigned int i = 0; i < adjList.size(); ++i) {
+                visited[i] = false;
+            };
+
+            visiting.push(start);
+            visited[start] = true;
+
+            while (!visiting.empty()) {
+                const unsigned int& currentNodeIndex = visiting.front();
+                const Node& currentNode = adjList.at(currentNodeIndex);
+                const std::string& currentName = currentNode.shortName;
+                output += currentName + " -> ";
+                const Edges& currentEdges = currentNode.edges;
+                visiting.pop();
+                for (unsigned int i = 0; i < currentEdges.size(); ++i) {
+                    const Edge& currentEdge = currentEdges.at(i);
+                    const unsigned int& currentNeighborIndex = currentEdge.to;
+                    if (!visited[currentNeighborIndex]) {
+                        visiting.push(currentNeighborIndex);
+                        visited[currentNeighborIndex] = true;
+                    };
+                };
+            };
+
+            return output;
+
+        };
+
+        std::string shortestPath(
+            const unsigned int from,
+            const unsigned int to
+        ) {
+
+            const unsigned int& size = adjList.size();
+
+            const unsigned int INF = UINT_MAX;
+
+            std::vector<unsigned int> queue;
+            queue.reserve(size);
+
+            unsigned int dist[size] = {};
+            const Node* prev[size] = {};
+
+            for (unsigned int i = 0; i < size; ++i) {
+                const unsigned int& currentNodeIndex = i;
+                const Node& currentNode = adjList[currentNodeIndex];
+                dist[currentNodeIndex] = INF;
+                prev[currentNodeIndex] = nullptr;
+                queue.push_back(currentNodeIndex);
+            };
+
+            dist[from] = 0;
+
+            while (!queue.empty()) {
+                unsigned int closestNodeIndex = queue.front();
+                for (unsigned int i = 0; i < queue.size(); ++i) {
+                    const unsigned int& currentNodeIndex = i;
+                    const unsigned int& currentDistance = dist[currentNodeIndex];
+                    if (dist[currentNodeIndex] < dist[closestNodeIndex]) {
+                        closestNodeIndex = currentNodeIndex;
+                    };
+                };
+
+                auto it = std::find(queue.begin(), queue.end(), closestNodeIndex);
+
+                if (it != queue.end()) {
+                    queue.erase(it);
+                };
+
+                const Node& closestNode = adjList.at(closestNodeIndex);
+                const Edges& edges = closestNode.edges;
+
+                unsigned int alternativeDistanceFromCurrentNodeToNeighbor = 0;
+                for (unsigned int i = 0; i < edges.size(); ++i) {
+                    const unsigned int& currentEdgeIndex = i;
+                    const Edge& currentEdge = edges.at(currentEdgeIndex);
+                    const unsigned int& currentNeighborIndex = currentEdge.to;
+                    const unsigned int& distanceFromCurrentNodeToNeighbor = currentEdge.weight;
+                    alternativeDistanceFromCurrentNodeToNeighbor = dist[closestNodeIndex] + distanceFromCurrentNodeToNeighbor;
+                    if (alternativeDistanceFromCurrentNodeToNeighbor < dist[currentNeighborIndex]) {
+
+                    };
+                };
+
             };
 
         };
+
+/*
+BFS Traversal starting from Kruger:
+
+Kruger → Limpopo → Kgalagadi → Chobe → Etosha → Hwange
+*/
 
         /*
 
@@ -485,27 +601,36 @@ Wildlife Corridor Network System
                 break;
             };
             case '2': {
-                /*
-Adjacency Matrix (km)
-
-        KR   LI   CH   HW   ET   KG
-KR       0   120    0    0    0   500
-LI     120     0  290    0    0     0
-CH       0   290    0   90    0     0
-HW       0     0   90    0  600     0
-ET       0     0    0  600    0   850
-KG     500     0    0    0  850     0
-                */
-                return 0;
+                clearScreen();
+                std::cout
+                    << HEADER
+                    << conservationNetworkGraph.adjListToString()
+                    << "Press enter to continue..."
+                    << std::endl
+                ;
+                std::string dummyStr;
+                std::getline(
+                    std::cin,
+                    dummyStr,
+                    '\n'
+                );
                 break;
             };
             case '3': {
-/*
-BFS Traversal starting from Kruger:
-
-Kruger → Limpopo → Kgalagadi → Chobe → Etosha → Hwange
-*/
-                return 0;
+                clearScreen();
+                std::cout
+                    << HEADER
+                    << conservationNetworkGraph.BFSPath(0) << std::endl
+                    << std::endl
+                    << "Press enter to continue..."
+                    << std::endl
+                ;
+                std::string dummyStr;
+                std::getline(
+                    std::cin,
+                    dummyStr,
+                    '\n'
+                );
                 break;
             };
             case '4': {
