@@ -151,7 +151,7 @@ class ConservationNetworkGraph {
 
         };
 
-        std::string BFSPath(
+        std::string BFSPathToString(
             const unsigned int start
         ) {
 
@@ -194,26 +194,34 @@ class ConservationNetworkGraph {
 
         };
 
-        std::string shortestPath(
-            const unsigned int from,
-            const unsigned int to
+        std::string shortestPathToString(
+            const unsigned int& from,
+            const unsigned int& to
         ) {
 
-            const unsigned int& size = adjList.size();
+            if (from >= adjList.size()) {
+                std::string errorMsg = "from index '" + std::to_string(from) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
+                return errorMsg;
+            };
 
-            const unsigned int INF = UINT_MAX;
+            if (to >= adjList.size()) {
+                std::string errorMsg = "to index '" + std::to_string(to) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
+                return errorMsg;
+            };
+
+            const unsigned int& INF = UINT_MAX;
+            const unsigned int& NULL_PREV = UINT_MAX;
 
             std::vector<unsigned int> queue;
-            queue.reserve(size);
+            queue.reserve(adjList.size());
 
-            unsigned int dist[size] = {};
-            const Node* prev[size] = {};
+            unsigned int dist[adjList.size()] = {};
+            unsigned int prev[adjList.size()] = {};
 
-            for (unsigned int i = 0; i < size; ++i) {
+            for (unsigned int i = 0; i < adjList.size(); ++i) {
                 const unsigned int& currentNodeIndex = i;
-                const Node& currentNode = adjList[currentNodeIndex];
                 dist[currentNodeIndex] = INF;
-                prev[currentNodeIndex] = nullptr;
+                prev[currentNodeIndex] = NULL_PREV;
                 queue.push_back(currentNodeIndex);
             };
 
@@ -222,7 +230,7 @@ class ConservationNetworkGraph {
             while (!queue.empty()) {
                 unsigned int closestNodeIndex = queue.front();
                 for (unsigned int i = 0; i < queue.size(); ++i) {
-                    const unsigned int& currentNodeIndex = i;
+                    const unsigned int& currentNodeIndex = queue.at(i);
                     const unsigned int& currentDistance = dist[currentNodeIndex];
                     if (dist[currentNodeIndex] < dist[closestNodeIndex]) {
                         closestNodeIndex = currentNodeIndex;
@@ -238,84 +246,61 @@ class ConservationNetworkGraph {
                 const Node& closestNode = adjList.at(closestNodeIndex);
                 const Edges& edges = closestNode.edges;
 
-                unsigned int alternativeDistanceFromCurrentNodeToNeighbor = 0;
                 for (unsigned int i = 0; i < edges.size(); ++i) {
                     const unsigned int& currentEdgeIndex = i;
                     const Edge& currentEdge = edges.at(currentEdgeIndex);
                     const unsigned int& currentNeighborIndex = currentEdge.to;
                     const unsigned int& distanceFromCurrentNodeToNeighbor = currentEdge.weight;
-                    alternativeDistanceFromCurrentNodeToNeighbor = dist[closestNodeIndex] + distanceFromCurrentNodeToNeighbor;
+                    const unsigned int alternativeDistanceFromCurrentNodeToNeighbor = dist[closestNodeIndex] + distanceFromCurrentNodeToNeighbor;
                     if (alternativeDistanceFromCurrentNodeToNeighbor < dist[currentNeighborIndex]) {
-
+                        dist[currentNeighborIndex] = alternativeDistanceFromCurrentNodeToNeighbor;
+                        prev[currentNeighborIndex] = closestNodeIndex;
                     };
                 };
 
             };
 
-        };
+            std::vector<unsigned int> path = {};
+            path.reserve(adjList.size());
 
-/*
-BFS Traversal starting from Kruger:
+            unsigned int current = to;
 
-Kruger → Limpopo → Kgalagadi → Chobe → Etosha → Hwange
-*/
-
-        /*
-
-        void BFS(int start) {
-
-            std::queue<int> visiting;
-
-            std::vector<bool> visited(adjList.size(), false);
-
-            visiting.push(start);
-            visited.at(start) = true;
-
-            while (!visiting.empty()) {
-
-                int vIndex = visiting.front();
-                visiting.pop();
-                std::cout << vIndex << ' ';
-
-                const std::vector<int>& vertexNeighbors = adjList.at(vIndex);
-                for (unsigned int i = 0; i < vertexNeighbors.size(); i++) {
-                    const int neighbor = vertexNeighbors.at(i);
-                    if (!visited.at(neighbor)) {
-                        visiting.push(neighbor);
-                        visited.at(neighbor) = true;
-                    };
+            if (prev[current] != NULL_PREV || current == from) {
+                while (current != from) {
+                    path.push_back(current);
+                    current = prev[current];
                 };
+                path.push_back(from);
             };
 
-        };
+            std::string output = "";
 
-        void DFS(const std::vector<std::vector<int>>& adjList, int start) {
+            const Node& fromNode = adjList.at(from);
+            const Node& toNode = adjList.at(to);
 
-            std::stack<int> visiting;
+            output += "shortest route from " + fromNode.name + " to " + toNode.name + "\n\n";
 
-            std::vector<bool> visited(adjList.size(), false);
-
-            visiting.push(start);
-            visited.at(start) = true;
-
-            while (!visiting.empty()) {
-
-                int vIndex = visiting.top();
-                visiting.pop();
-                std::cout << vIndex << ' ';
-
-                const std::vector<int>& vertexNeighbors = adjList.at(vIndex);
-                for (int i = vertexNeighbors.size() - 1; i >= 0; i--) {
-                    const int neighbor = vertexNeighbors.at(i);
-                    if (!visited.at(neighbor)) {
-                        visiting.push(neighbor);
-                        visited.at(neighbor) = true;
-                    };
-                };
+            for (unsigned int i = path.size() - 1; i < path.size(); --i) {
+                const unsigned int& currentNodeIndex = path.at(i);
+                const Node& currentNode = adjList.at(currentNodeIndex);
+                const std::string& currentNodeName = currentNode.name;
+                output += currentNodeName + (currentNodeIndex < path.size() - 1 ? " -> " : "");
             };
 
+            output += "\n\n" + std::string("Total distance: ") + std::to_string(dist[to]) + "km";
+
+            return output;
+
+            /*
+            Shortest route from Kruger to Hwange
+
+            Kruger → Limpopo → Chobe → Hwange
+
+            Total distance: 410 km
+            */
+
         };
-        */
+
 };
 
 int main() {
@@ -620,7 +605,7 @@ Wildlife Corridor Network System
                 clearScreen();
                 std::cout
                     << HEADER
-                    << conservationNetworkGraph.BFSPath(0) << std::endl
+                    << conservationNetworkGraph.BFSPathToString(0) << std::endl
                     << std::endl
                     << "Press enter to continue..."
                     << std::endl
@@ -634,19 +619,20 @@ Wildlife Corridor Network System
                 break;
             };
             case '4': {
-/*
-Shortest path from Kruger to Hwange:
-
-Kruger → Limpopo → Chobe → Hwange
-
-Total distance: 500 km
-Shortest path from Kruger to Etosha:
-
-Kruger → Kgalagadi → Etosha
-
-Total distance: 1350 km
-*/
-                return 0;
+                clearScreen();
+                std::cout
+                    << HEADER
+                    << conservationNetworkGraph.shortestPathToString(1, 4) << std::endl
+                    << std::endl
+                    << "Press enter to continue..."
+                    << std::endl
+                ;
+                std::string dummyStr;
+                std::getline(
+                    std::cin,
+                    dummyStr,
+                    '\n'
+                );
                 break;
             };
             case '5': {
