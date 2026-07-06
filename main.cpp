@@ -59,6 +59,10 @@ class ConservationNetworkGraph {
             const AdjList adjListP
         ): adjList(adjListP) {};
 
+        const AdjList& getAdjList() {
+            return adjList;
+        };
+
         std::string toString() {
 
             std::string output = "Conservation Network:\n\n";
@@ -173,11 +177,14 @@ class ConservationNetworkGraph {
             visiting.push(start);
             visited[start] = true;
 
+            std::vector<unsigned int> visitedNodesIndicesOrder = {};
+            visitedNodesIndicesOrder.reserve(adjList.size());
+
             while (!visiting.empty()) {
                 const unsigned int& currentNodeIndex = visiting.front();
                 const Node& currentNode = adjList.at(currentNodeIndex);
                 const std::string& currentName = currentNode.shortName;
-                output += currentName + " -> ";
+                visitedNodesIndicesOrder.push_back(currentNodeIndex);
                 const Edges& currentEdges = currentNode.edges;
                 visiting.pop();
                 for (unsigned int i = 0; i < currentEdges.size(); ++i) {
@@ -188,6 +195,13 @@ class ConservationNetworkGraph {
                         visited[currentNeighborIndex] = true;
                     };
                 };
+            };
+
+            for (unsigned int i = 0; i < visitedNodesIndicesOrder.size(); ++i) {
+                const unsigned int& currentNodeIndex = visitedNodesIndicesOrder.at(i);
+                const Node& currentNode = adjList.at(currentNodeIndex);
+                const std::string& currentNodeName = currentNode.name;
+                output += currentNodeName + (i ==  visitedNodesIndicesOrder.size() - 1 ? "" : " -> ");
             };
 
             return output;
@@ -284,7 +298,7 @@ class ConservationNetworkGraph {
                 const unsigned int& currentNodeIndex = path.at(i);
                 const Node& currentNode = adjList.at(currentNodeIndex);
                 const std::string& currentNodeName = currentNode.name;
-                output += currentNodeName + (currentNodeIndex < path.size() - 1 ? " -> " : "");
+                output += currentNodeName + (i == 0 ? "" : " -> ");
             };
 
             output += "\n\n" + std::string("Total distance: ") + std::to_string(dist[to]) + "km";
@@ -318,26 +332,17 @@ int main() {
                 Kruger -> Limpopo
                 0 -> 1
                 */
-                {
-                    .to = 1,
-                    .weight = 120
-                },
+                { .to = 1, .weight = 120 },
                 /*
                 Kruger -> Hwange
                 0 -> 2
                 */
-                {
-                    .to = 2,
-                    .weight = 800
-                },
+                { .to = 2, .weight = 800 },
                 /*
                 Kruger -> Kgalagadi
                 0 -> 5
                 */
-                {
-                    .to = 5,
-                    .weight = 1100
-                },
+                { .to = 5, .weight = 1100 },
             }
         },
         /*
@@ -353,18 +358,12 @@ int main() {
                 Limpopo -> Kruger
                 1 -> 0
                 */
-                {
-                    .to = 0,
-                    .weight = 120
-                },
+                { .to = 0, .weight = 120 },
                 /*
                 Limpopo -> Hwange
                 1 -> 2
                 */
-                {
-                    .to = 2,
-                    .weight = 850
-                }
+                { .to = 2, .weight = 850 }
             }
         },
         /*
@@ -379,34 +378,22 @@ int main() {
                 Hwange -> Kruger
                 2 -> 0
                 */
-                {
-                    .to = 0,
-                    .weight = 800
-                },
+                { .to = 0, .weight = 800 },
                 /*
                 Hwange -> Limpopo
                 2 -> 1
                 */
-                {
-                    .to = 1,
-                    .weight = 850
-                },
+                { .to = 1, .weight = 850 },
                 /*
                 Hwange  -> Chobe
                 2 -> 3
                 */
-                {
-                    .to = 3,
-                    .weight = 90
-                },
+                { .to = 3, .weight = 90 },
                 /*
                 Hwange -> Kgalagadi
                 2 -> 5
                 */
-                {
-                    .to = 5,
-                    .weight = 900
-                }
+                { .to = 5, .weight = 900 }
             }
         },
         /*
@@ -422,26 +409,17 @@ int main() {
                 Chobe -> Hwange
                 3 -> 2
                 */
-                {
-                    .to = 2,
-                    .weight = 90
-                },
+                { .to = 2, .weight = 90 },
                 /*
                 Chobe -> Etosha
                 3 -> 4
                 */
-                {
-                    .to = 4,
-                    .weight = 950
-                },
+                { .to = 4, .weight = 950 },
                 /*
                 Chobe -> Kgalagadi
                 3 -> 5
                 */
-                {
-                    .to = 5,
-                    .weight = 900
-                }
+                { .to = 5, .weight = 900 }
             }
         },
         /*
@@ -457,18 +435,12 @@ int main() {
                 Etosha -> Kgalagadi
                 4 -> 5
                 */
-                {
-                    .to = 5,
-                    .weight = 850
-                },
+                { .to = 5, .weight = 850 },
                 /*
                 Etosha -> Chobe
                 4 -> 3
                 */
-                {
-                    .to = 3,
-                    .weight = 950
-                }
+                { .to = 3, .weight = 950 }
             }
         },
         /*
@@ -484,34 +456,22 @@ int main() {
                 Kgalagadi -> Kruger
                 5 -> 0
                 */
-                {
-                    .to = 0,
-                    .weight = 1100
-                },
+                { .to = 0, .weight = 1100 },
                 /*
                 Kgalagadi -> Etosha
                 5 -> 4
                 */
-                {
-                    .to = 4,
-                    .weight = 850
-                },
+                { .to = 4, .weight = 850 },
                 /*
                 Kgalagadi -> Chobe
                 5 -> 3
                 */
-                {
-                    .to = 3,
-                    .weight = 900
-                },
+                { .to = 3, .weight = 900 },
                 /*
                 Kgalagadi -> Hwange
                 5 -> 3
                 */
-                {
-                    .to = 2,
-                    .weight = 900
-                }
+                { .to = 2, .weight = 900 }
             }
         }
     });
@@ -523,9 +483,11 @@ Wildlife Corridor Network System
 
 )";
 
+    const char DEFAULT_STATUS[] = "Ok";
+
     std::string input_str = "";
     char input_char = ' ';
-    std::string status = "Ok";
+    std::string status = DEFAULT_STATUS;
     bool running  = true;
 
     do {
@@ -544,25 +506,16 @@ Wildlife Corridor Network System
             << std::endl
         ;
 
+        status = DEFAULT_STATUS;
+
         std::getline(
             std::cin,
             input_str,
             '\n'
         );
 
-        if (
-            (
-                input_str.size() >= 2
-            ) ||
-            !(
-                input_str[0] == '1' ||
-                input_str[0] == '2' ||
-                input_str[0] == '3' ||
-                input_str[0] == '4' ||
-                input_str[0] == '5'
-            )
-        ) {
-            status = "Error: input must be a character 1, 2, 3, 4 or 5";
+        if (input_str.size() >= 2) {
+            status = "Error: input must be only 1 character";
             continue;
         };
 
@@ -605,10 +558,54 @@ Wildlife Corridor Network System
                 clearScreen();
                 std::cout
                     << HEADER
-                    << conservationNetworkGraph.BFSPathToString(0) << std::endl
+                    << "Parks:" << std::endl
+                ;
+
+                const AdjList& adjList = conservationNetworkGraph.getAdjList();
+
+                for (unsigned int i = 0; i < adjList.size(); ++i) {
+                    const Node& currentNode = adjList.at(i);
+                    std::cout << i << ": " << currentNode.name << std::endl;
+                };
+
+                std::cout
                     << std::endl
-                    << "Press enter to continue..."
+                    << "Start location: "
+                ;
+
+                std::string inputStartParkStr = "";
+
+                std::getline(
+                    std::cin,
+                    inputStartParkStr,
+                    '\n'
+                );
+
+                unsigned int startParkIndex = 0;
+
+                startParkIndex = inputStartParkStr[0] - '0';
+
+                if (inputStartParkStr.size() >= 2 || startParkIndex >= adjList.size()) {
+                    std::cout
+                        << std::endl
+                        << "Error: input must be one character out of the valid options above" << std::endl
+                        << std::endl
+                        << "Press enter to continue..." << std::endl
+                    ;
+                    std::string dummyStr;
+                    std::getline(
+                        std::cin,
+                        dummyStr,
+                        '\n'
+                    );
+                    break;
+                };
+
+                std::cout
                     << std::endl
+                    << conservationNetworkGraph.BFSPathToString(startParkIndex) << std::endl
+                    << std::endl
+                    << "Press enter to continue..." << std::endl
                 ;
                 std::string dummyStr;
                 std::getline(
@@ -622,10 +619,86 @@ Wildlife Corridor Network System
                 clearScreen();
                 std::cout
                     << HEADER
-                    << conservationNetworkGraph.shortestPathToString(1, 4) << std::endl
+                    << "Parks:" << std::endl
+                ;
+
+                const AdjList& adjList = conservationNetworkGraph.getAdjList();
+
+                for (unsigned int i = 0; i < adjList.size(); ++i) {
+                    const Node& currentNode = adjList.at(i);
+                    std::cout << i << " - " << currentNode.name << std::endl;
+                };
+
+                std::cout
                     << std::endl
-                    << "Press enter to continue..."
+                    << "Start location: "
+                ;
+
+                std::string inputStartParkStr = "";
+
+                std::getline(
+                    std::cin,
+                    inputStartParkStr,
+                    '\n'
+                );
+
+                unsigned int startParkIndex = 0;
+
+                startParkIndex = inputStartParkStr[0] - '0';
+
+                if (inputStartParkStr.size() >= 2 || startParkIndex >= adjList.size()) {
+                    std::cout
+                        << std::endl
+                        << "Error: input must be one character out of the valid options above" << std::endl
+                        << std::endl
+                        << "Press enter to continue..." << std::endl
+                    ;
+                    std::string dummyStr;
+                    std::getline(
+                        std::cin,
+                        dummyStr,
+                        '\n'
+                    );
+                    break;
+                };
+
+                std::cout
+                    << "Destination location: "
+                ;
+
+                std::string inputDestinationParkStr = "";
+
+                std::getline(
+                    std::cin,
+                    inputDestinationParkStr,
+                    '\n'
+                );
+
+                unsigned int destinationParkIndex = 0;
+
+                destinationParkIndex = inputDestinationParkStr[0] - '0';
+
+                if (inputDestinationParkStr.size() >= 2 || destinationParkIndex >= adjList.size()) {
+                    std::cout
+                        << std::endl
+                        << "Error: input must be one character out of the valid options above" << std::endl
+                        << std::endl
+                        << "Press enter to continue..." << std::endl
+                    ;
+                    std::string dummyStr;
+                    std::getline(
+                        std::cin,
+                        dummyStr,
+                        '\n'
+                    );
+                    break;
+                };
+
+                std::cout
                     << std::endl
+                    << conservationNetworkGraph.shortestPathToString(startParkIndex, destinationParkIndex) << std::endl
+                    << std::endl
+                    << "Press enter to continue..." << std::endl
                 ;
                 std::string dummyStr;
                 std::getline(
@@ -636,13 +709,15 @@ Wildlife Corridor Network System
                 break;
             };
             case '5': {
-                std::cout << "Exiting program..." << std::endl;
+                std::cout
+                    << std::endl
+                    << "Exiting program..." << std::endl
+                ;
                 running = false;
                 break;
             };
             default: {
-                std::cout << "Error invalid input character: '" << input_char << '\'' << std::endl;
-                return 1;
+                status = "Error: input must be a character 1, 2, 3, 4 or 5";
                 break;
             };
         };
