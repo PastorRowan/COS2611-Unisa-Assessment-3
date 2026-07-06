@@ -23,7 +23,15 @@ struct Edge;
 struct Node;
 class ConservationNetworkGraph;
 
+// Functions clears the screen
 void clearScreen() {
+    /*
+    If macro _WIN32 is defined then system cls command will run (program compiled on Windows computer)
+    else the command system clear will run (program compiled on Mac or Linux computer)
+    Both commands do the same thing that is:
+        Clear the command line
+        Move the cursor to home position (top left)
+    */
     #ifdef _WIN32
         system("cls");
     #else
@@ -31,22 +39,56 @@ void clearScreen() {
     #endif
 };
 
+/*
+An Edge represents one wildlife corridor in the graph
 
+to:
+    Stores the index of the neighbouring conservation area
+
+weight:
+    Stores the distance between the two parks in kilometres
+
+Each edge connects one park to another
+*/
 struct Edge {
     const unsigned int to;
     const unsigned int weight;
 };
 
+// Used for convenience later
 typedef std::vector<Edge> Edges;
 
+/*
+A Node represents a national park
+
+name:
+    Stores the name of the national park
+
+shortName:
+    Stores the name of the national park as the 2 first letters capitalised
+
+edges:
+    A vector of edge structs
+    Represents all possible wildlife corridors between this national park and others
+*/
 struct Node {
     const std::string name;
     const std::string shortName;
     const Edges edges;
 };
 
+// Used for convenience later
 typedef std::vector<Node> AdjList;
 
+/*
+    A conservation network graphs is a collection of national parks and their wildlife corridors (paths)
+    between each other
+    The national parks are represented as nodes
+    The wildlife corridators are represented by edges
+
+    adjList:
+        An array of Nodes
+*/
 class ConservationNetworkGraph {
 
     private:
@@ -55,14 +97,29 @@ class ConservationNetworkGraph {
 
     public:
 
+        /*
+            ConservationNetworkGraph constructor
+
+            Parameters:
+            takes an adjacency list as input to set as the adjacency list for the network
+        */ 
         ConservationNetworkGraph(
             const AdjList adjListP
         ): adjList(adjListP) {};
 
+        /*
+            getAdjList
+            
+            Returns a constant reference to adjList (adjList cannot be modified using the reference)
+        */
         const AdjList& getAdjList() {
             return adjList;
         };
 
+        /*
+            Returns a string to visually represent the entire conservation network (All national parks
+            and wildlife corridors between them)
+        */
         std::string toString() {
 
             std::string output = "Conservation Network:\n\n";
@@ -100,6 +157,18 @@ class ConservationNetworkGraph {
 
         };
 
+        /*
+            adjListToString
+
+            Returns a string representing the adjacency list of the conservation network as a table
+            All national parks are represented using their short name
+            The 1st row and 1st column contain the national parks short names
+            The intersection of 2 national parks represent an edge from the row park to the column park (
+            Not also the other way around)
+            A 0 entry means that a wilflife corridor does not exist
+            A positive value means that a wildlife corridor does exist from row park to column park
+            and the distance is the value.
+        */
         std::string adjListToString() {
 
             std::string output = "";
@@ -155,27 +224,37 @@ class ConservationNetworkGraph {
 
         };
 
+        /*
+            BFSPathToString
+
+            Returns a string representing the path taken in a breadth 1st search of the
+            conservation network from the start index
+
+            A breadth 1st search is a method of traversing an entire graph
+            It uses a queue to keep track of which parks to visit next
+            The starting park is visited 1st, then all of its neighbor parks
+            before moving onto the neighbours of those parks
+            A visited list is maitained to ensure that each park is visited
+            only once (Allowing infinite repeated visits would cause an infinite loop could occur)
+
+            Parameters:
+            start - a constant reference to the start index of the breadth first search
+
+        */
         std::string BFSPathToString(
-            const unsigned int start
+            const unsigned int& start
         ) {
 
-            std::string output = "";
-
             if (start >= adjList.size()) {
-                output = "Start index '" + std::to_string(start) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
-                return output;
+                std::string errorMsg = "Start index '" + std::to_string(start) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
+                return errorMsg;
             };
 
             std::queue<unsigned int> visiting;
-
-            bool visited[adjList.size()] = {};
-
-            for (unsigned int i = 0; i < adjList.size(); ++i) {
-                visited[i] = false;
-            };
+            std::vector<bool> visited(adjList.size(), false);
 
             visiting.push(start);
-            visited[start] = true;
+            visited.at(start) = true;
 
             std::vector<unsigned int> visitedNodesIndicesOrder = {};
             visitedNodesIndicesOrder.reserve(adjList.size());
@@ -190,12 +269,14 @@ class ConservationNetworkGraph {
                 for (unsigned int i = 0; i < currentEdges.size(); ++i) {
                     const Edge& currentEdge = currentEdges.at(i);
                     const unsigned int& currentNeighborIndex = currentEdge.to;
-                    if (!visited[currentNeighborIndex]) {
+                    if (!visited.at(currentNeighborIndex)) {
                         visiting.push(currentNeighborIndex);
-                        visited[currentNeighborIndex] = true;
+                        visited.at(currentNeighborIndex) = true;
                     };
                 };
             };
+
+            std::string output = "";
 
             for (unsigned int i = 0; i < visitedNodesIndicesOrder.size(); ++i) {
                 const unsigned int& currentNodeIndex = visitedNodesIndicesOrder.at(i);
@@ -208,6 +289,27 @@ class ConservationNetworkGraph {
 
         };
 
+        /*
+            shortestPathToString
+
+            Returns a string representing the shortest path from one park to another
+
+            Parameters:
+            from - a constant reference to an index of the starting park within the adjacency list
+            to - a constant reference to an index of the destination park within the adjacency list
+
+            e.g:
+                std::string shortestPath = 
+
+            working on it:
+
+            Shortest route from Kruger to Hwange
+
+            Kruger → Limpopo → Chobe → Hwange
+
+            Total distance: 410 km
+
+        */
         std::string shortestPathToString(
             const unsigned int& from,
             const unsigned int& to
@@ -304,14 +406,6 @@ class ConservationNetworkGraph {
             output += "\n\n" + std::string("Total distance: ") + std::to_string(dist[to]) + "km";
 
             return output;
-
-            /*
-            Shortest route from Kruger to Hwange
-
-            Kruger → Limpopo → Chobe → Hwange
-
-            Total distance: 410 km
-            */
 
         };
 
@@ -585,7 +679,7 @@ Wildlife Corridor Network System
 
                 startParkIndex = inputStartParkStr[0] - '0';
 
-                if (inputStartParkStr.size() >= 2 || startParkIndex >= adjList.size()) {
+                if (inputStartParkStr.size() != 1 || startParkIndex >= adjList.size()) {
                     std::cout
                         << std::endl
                         << "Error: input must be one character out of the valid options above" << std::endl
@@ -646,7 +740,7 @@ Wildlife Corridor Network System
 
                 startParkIndex = inputStartParkStr[0] - '0';
 
-                if (inputStartParkStr.size() >= 2 || startParkIndex >= adjList.size()) {
+                if (inputStartParkStr.size() != 1 || startParkIndex >= adjList.size()) {
                     std::cout
                         << std::endl
                         << "Error: input must be one character out of the valid options above" << std::endl
@@ -678,7 +772,7 @@ Wildlife Corridor Network System
 
                 destinationParkIndex = inputDestinationParkStr[0] - '0';
 
-                if (inputDestinationParkStr.size() >= 2 || destinationParkIndex >= adjList.size()) {
+                if (inputDestinationParkStr.size() != 1 || destinationParkIndex >= adjList.size()) {
                     std::cout
                         << std::endl
                         << "Error: input must be one character out of the valid options above" << std::endl
