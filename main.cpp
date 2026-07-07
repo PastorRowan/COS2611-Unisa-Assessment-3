@@ -19,15 +19,19 @@ Assignment: Assessment 3
 
 // Declarations
 void clearScreen();
-struct Edge;
-struct Node;
+struct WildfLifeCorridor;
+struct NationalPark;
 class ConservationNetworkGraph;
 
-// Functions clears the screen
+/*
+clearScreen
+
+Clears the terminal screen on Windows, Linux and MacOs
+*/
 void clearScreen() {
     /*
     If macro _WIN32 is defined then system cls command will run (program compiled on Windows computer)
-    else the command system clear will run (program compiled on Mac or Linux computer)
+    else the command system clear will run (program compiled on MacOs or Linux computer)
     Both commands do the same thing that is:
         Clear the command line
         Move the cursor to home position (top left)
@@ -39,113 +43,135 @@ void clearScreen() {
     #endif
 };
 
+void waitForEnter() {
+
+    std::cout << "Press enter to continue..." << std::endl;
+
+    std::string dummyStr;
+    std::getline(
+        std::cin,
+        dummyStr,
+        '\n'
+    );
+
+};
+
 /*
-An Edge represents one wildlife corridor in the graph
+WildfLifeCorridor
+
+Represents a wildlife corridor connecting one national park to another
 
 to:
-    Stores the index of the neighbouring conservation area
+    Index of the destination national park in the adjacency list
 
 weight:
-    Stores the distance between the two parks in kilometres
-
-Each edge connects one park to another
+    Distance between the 2 parks
 */
-struct Edge {
+struct WildfLifeCorridor {
     const unsigned int to;
     const unsigned int weight;
 };
 
 // Used for convenience later
-typedef std::vector<Edge> Edges;
+typedef std::vector<WildfLifeCorridor> WildfLifeCorridors;
 
 /*
-A Node represents a national park
+NationalPark
+
+Represents a national park in the conservation network
 
 name:
-    Stores the name of the national park
+    Full name of the park
 
 shortName:
-    Stores the name of the national park as the 2 first letters capitalised
+    Name of the national park as the 2 1st letters capitalised
 
-edges:
-    A vector of edge structs
-    Represents all possible wildlife corridors between this national park and others
+wildfLifeCorridors:
+    List of all wildlife corridors between this national park and neighboring parks
 */
-struct Node {
+struct NationalPark {
     const std::string name;
     const std::string shortName;
-    const Edges edges;
+    const WildfLifeCorridors wildfLifeCorridors;
 };
 
-// Used for convenience later
-typedef std::vector<Node> AdjList;
+/*
+A list of national parks
+
+Internally its a graph adjacency list
+*/
+typedef std::vector<NationalPark> NationalParks;
 
 /*
-    A conservation network graphs is a collection of national parks and their wildlife corridors (paths)
-    between each other
-    The national parks are represented as nodes
-    The wildlife corridators are represented by edges
+ConservationNetworkGraph
 
-    adjList:
-        An array of Nodes
+Represents the entire conversation network as a graph
+
+Each national park is represented by a NationalPark
+Each wildlife corridor is represetned by a weighted edge
+
+nationalParks:
+    Stores the graph as an adjacency list
 */
 class ConservationNetworkGraph {
 
     private:
 
-        const AdjList adjList;
+        const NationalParks nationalParks;
 
     public:
 
         /*
-            ConservationNetworkGraph constructor
+        ConservationNetworkGraph constructor
 
-            Parameters:
-            takes an adjacency list as input to set as the adjacency list for the network
+        Parameters:
+        nationalParksP - takes an adjacency list as input
         */ 
         ConservationNetworkGraph(
-            const AdjList adjListP
-        ): adjList(adjListP) {};
+            const NationalParks nationalParksP
+        ): nationalParks(nationalParksP) {};
 
         /*
-            getAdjList
-            
-            Returns a constant reference to adjList (adjList cannot be modified using the reference)
+        getNationalParks
+        
+        Returns a constant reference to the graph's adjacency list
+        The returned reference cannot be used to modify the graph's adjacency list
         */
-        const AdjList& getAdjList() {
-            return adjList;
+        const NationalParks& getNationalParks() {
+            return nationalParks;
         };
 
         /*
-            Returns a string to visually represent the entire conservation network (All national parks
-            and wildlife corridors between them)
+        Returns a string to visually represent the entire conservation network (All national parks
+        and wildlife corridors between them)
         */
         std::string toString() {
 
+            // Build a human readable representation of the Conservation Network
             std::string output = "Conservation Network:\n\n";
 
             // Loop over all nodes in the adjacency list
-            for (unsigned int i = 0; i < adjList.size(); ++i) {
+            for (unsigned int i = 0; i < nationalParks.size(); ++i) {
 
                 // Get current node data
-                const Node& currentNode = adjList.at(i);
-                const std::string& currentNodeName = currentNode.name;
-                const Edges& currentNodeEdges = currentNode.edges;
+                const NationalPark& currentNationalPark = nationalParks.at(i);
+                const std::string& currentNationalParkName = currentNationalPark.name;
+                const WildfLifeCorridors& currentNationalParkWildfLifeCorridors = currentNationalPark.wildfLifeCorridors;
 
                 // Loop over the current node's edges
-                for (unsigned int j = 0; j < currentNodeEdges.size(); ++j) {
+                for (unsigned int j = 0; j < currentNationalParkWildfLifeCorridors.size(); ++j) {
 
                     // Get current edge data
-                    const Edge& currentEdge = currentNodeEdges[j];
-                    const unsigned int& currentNeighborIndex = currentEdge.to;
-                    const unsigned int& currentEdgeWeight = currentEdge.weight;
+                    const WildfLifeCorridor& currentWildfLifeCorridor = currentNationalParkWildfLifeCorridors[j];
+                    const unsigned int& currentNeighborIndex = currentWildfLifeCorridor.to;
+                    const unsigned int& currentWildfLifeCorridorWeight = currentWildfLifeCorridor.weight;
 
                     // Get current neighbor data
-                    const Node& currentNeighbor = adjList.at(currentNeighborIndex);
+                    const NationalPark& currentNeighbor = nationalParks.at(currentNeighborIndex);
                     const std::string& currentNeighborName = currentNeighbor.name;
 
                     // append edge data to console
-                    output += currentNodeName + " -> " + currentNeighborName + " (" + std::to_string(currentEdgeWeight) + " km)\n";
+                    output += currentNationalParkName + " -> " + currentNeighborName + " (" + std::to_string(currentWildfLifeCorridorWeight) + " km)\n";
 
                 };
 
@@ -158,64 +184,76 @@ class ConservationNetworkGraph {
         };
 
         /*
-            adjListToString
+        nationalParksToString
 
-            Returns a string representing the adjacency list of the conservation network as a table
-            All national parks are represented using their short name
-            The 1st row and 1st column contain the national parks short names
-            The intersection of 2 national parks represent an edge from the row park to the column park (
-            Not also the other way around)
-            A 0 entry means that a wilflife corridor does not exist
-            A positive value means that a wildlife corridor does exist from row park to column park
-            and the distance is the value.
+        Returns a string representation of the adjacency list of the conservation network as a table
+
+        All national parks are represented using their short name
+
+        Rows represents the starting park
+        Columns represent the destination park
+
+        The intersection of a row and column represents a wildlife corridor from the
+        start park (row) to the destination park (column)
+
+        A entry with a value of 0 means that a wilflife corridor does not exist
+        A positive value represents the distance between the 2 parks (wildlife corridor exists)
         */
-        std::string adjListToString() {
+        std::string nationalParksToString() {
 
+            // Build a human readable representation of the adjacency list
             std::string output = "";
 
-            for (unsigned int i = 0; i < adjList.size(); ++i) {
-                const Node& currentNode = adjList.at(i);
-                const std::string& currentNodeShortName = currentNode.shortName;
-                output += '\t' + currentNodeShortName;
+            // Create the header row containing the short names of all parks
+            for (unsigned int i = 0; i < nationalParks.size(); ++i) {
+                const NationalPark& currentNationalPark = nationalParks.at(i);
+                const std::string& currentNationalParkShortName = currentNationalPark.shortName;
+                // Add park's short name to column
+                output += '\t' + currentNationalParkShortName;
             };
 
+            // Move console cursor to the 1st row of the table
             output += '\n';
 
-            for (unsigned int i = 0; i < adjList.size(); ++i) {
+            // Create one park row at a time by iterating over the nodes of the adajency matrix
+            for (unsigned int i = 0; i < nationalParks.size(); ++i) {
 
-                const unsigned int& currentNodeIndex = i;
-                const Node& currentNode = adjList.at(currentNodeIndex);
-                const std::string& currentNodeShortName = currentNode.shortName;
-                const Edges& currentNodeEdges = currentNode.edges;
+                const unsigned int& currentNationalParkIndex = i;
+                const NationalPark& currentNationalPark = nationalParks.at(currentNationalParkIndex);
+                const std::string& currentNationalParkShortName = currentNationalPark.shortName;
+                const WildfLifeCorridors& currentNationalParkWildfLifeCorridors = currentNationalPark.wildfLifeCorridors;
 
-                output += currentNodeShortName + '\t';
+                // output the current nodes short name and move console cursor one tab space (next column in table)
+                output += currentNationalParkShortName + '\t';
 
-                for (unsigned int j = 0; j < adjList.size(); ++j) {
+                // Create a row entry of the current park by checking whether an edge exists from it
+                // to every other park
+                for (unsigned int j = 0; j < nationalParks.size(); ++j) {
 
-                    const unsigned int& currentOtherNodeIndex = j;
+                    const unsigned int& currentOtherNationalParkIndex = j;
 
-                    const Edge* currentNodeEdge = nullptr;
+                    unsigned int weight = 0;
 
-                    for (unsigned int k = 0; k < currentNodeEdges.size(); ++k) {
+                    // Search the current park's edge list for a connection to the destination park
+                    for (unsigned int k = 0; k < currentNationalParkWildfLifeCorridors.size(); ++k) {
 
-                        const Edge& edge = currentNodeEdges.at(k);
+                        const WildfLifeCorridor& edge = currentNationalParkWildfLifeCorridors.at(k);
 
-                        if (currentOtherNodeIndex == edge.to) {
-                            currentNodeEdge = &edge;
+                        // If edge from current park to column park exists
+                        // then set the weight to the edges weight and break the loop
+                        if (edge.to == currentOtherNationalParkIndex) {
+                            weight = edge.weight;
                             break;
                         };
 
                     };
 
-                    if (currentNodeEdge != nullptr) {
-                        const unsigned int& currentNodeEdgeWeight = currentNodeEdge->weight;
-                        output += std::to_string(currentNodeEdgeWeight) + "\t";
-                    } else {
-                        output += "0\t";
-                    };
+                    // Enter edge weight entry then move the cursor one tab space (next column in table)
+                    output += std::to_string(weight) + '\t';
 
                 };
 
+                // Move console cursor to next row of the table
                 output += '\n';
 
             };
@@ -225,64 +263,86 @@ class ConservationNetworkGraph {
         };
 
         /*
-            BFSPathToString
+        BFSPathToString
 
-            Returns a string representing the path taken in a breadth 1st search of the
-            conservation network from the start index
+        Returns a string representing the path taken in a breadth 1st search of the
+        conservation network from the start index
 
-            A breadth 1st search is a method of traversing an entire graph
-            It uses a queue to keep track of which parks to visit next
-            The starting park is visited 1st, then all of its neighbor parks
-            before moving onto the neighbours of those parks
-            A visited list is maitained to ensure that each park is visited
-            only once (Allowing infinite repeated visits would cause an infinite loop could occur)
+        A breadth 1st search is a method of traversing an entire graph
+        It uses a queue to keep track of which parks to visit next
+        The starting park is visited 1st, then all of its neighbor parks
+        before moving onto the neighbours of those parks, etc
+        A visited list is maitained to ensure that each park is visited
+        only once (Allowing infinite repeated visits would cause an infinite loop)
 
-            Parameters:
-            start - a constant reference to the start index of the breadth first search
-
+        Parameters:
+        start - index of the starting park in the adjacency list
         */
         std::string BFSPathToString(
             const unsigned int& start
         ) {
 
-            if (start >= adjList.size()) {
-                std::string errorMsg = "Start index '" + std::to_string(start) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
+            // Ensure the starting park exists in the graph
+            // Return an error message if it does not
+            if (start >= nationalParks.size()) {
+                std::string errorMsg = "Start index '" + std::to_string(start) + "' is not from 0 to '" + std::to_string(nationalParks.size() - 1) + "' (inclusive)";
                 return errorMsg;
             };
 
+            // Queue of parks waiting to be visited
             std::queue<unsigned int> visiting;
-            std::vector<bool> visited(adjList.size(), false);
 
+            // Tracks whether each park has already been visited (prevent infinite loops)
+            std::vector<bool> visited(nationalParks.size(), false);
+
+            // Begin the BFS traversal from the starting park
             visiting.push(start);
             visited.at(start) = true;
 
-            std::vector<unsigned int> visitedNodesIndicesOrder = {};
-            visitedNodesIndicesOrder.reserve(adjList.size());
+            // Store the order in which parks are visited during the BFS traversal
+            std::vector<unsigned int> visitedNationalParksIndicesOrder = {};
+            visitedNationalParksIndicesOrder.reserve(nationalParks.size());
 
+            // Continue traversing until there are no more parks left in the queue to visit
             while (!visiting.empty()) {
-                const unsigned int& currentNodeIndex = visiting.front();
-                const Node& currentNode = adjList.at(currentNodeIndex);
-                const std::string& currentName = currentNode.shortName;
-                visitedNodesIndicesOrder.push_back(currentNodeIndex);
-                const Edges& currentEdges = currentNode.edges;
+
+                const unsigned int& currentNationalParkIndex = visiting.front();
+                const NationalPark& currentNationalPark = nationalParks.at(currentNationalParkIndex);
+                const WildfLifeCorridors& currentWildfLifeCorridors = currentNationalPark.wildfLifeCorridors;
+
+                // Remove the visited park from the queue
                 visiting.pop();
-                for (unsigned int i = 0; i < currentEdges.size(); ++i) {
-                    const Edge& currentEdge = currentEdges.at(i);
-                    const unsigned int& currentNeighborIndex = currentEdge.to;
+
+                // Record the current park in the visitation order
+                visitedNationalParksIndicesOrder.push_back(currentNationalParkIndex);
+
+                // Queue a visit to each univisited neighbouring park
+                for (unsigned int i = 0; i < currentWildfLifeCorridors.size(); ++i) {
+
+                    const WildfLifeCorridor& currentWildfLifeCorridor = currentWildfLifeCorridors.at(i);
+                    const unsigned int& currentNeighborIndex = currentWildfLifeCorridor.to;
+
+                    // Add the neighbour to the queue and mark it as visited
                     if (!visited.at(currentNeighborIndex)) {
                         visiting.push(currentNeighborIndex);
                         visited.at(currentNeighborIndex) = true;
                     };
+
                 };
+
             };
 
+            // Build a human readable representation of the BFS traversal
             std::string output = "";
 
-            for (unsigned int i = 0; i < visitedNodesIndicesOrder.size(); ++i) {
-                const unsigned int& currentNodeIndex = visitedNodesIndicesOrder.at(i);
-                const Node& currentNode = adjList.at(currentNodeIndex);
-                const std::string& currentNodeName = currentNode.name;
-                output += currentNodeName + (i ==  visitedNodesIndicesOrder.size() - 1 ? "" : " -> ");
+            // Convert the visitation order into a string separated by arrows
+            for (unsigned int i = 0; i < visitedNationalParksIndicesOrder.size(); ++i) {
+                const unsigned int& currentNationalParkIndex = visitedNationalParksIndicesOrder.at(i);
+                const NationalPark& currentNationalPark = nationalParks.at(currentNationalParkIndex);
+                const std::string& currentParkName = currentNationalPark.name;
+
+                // Add park name
+                output += currentParkName + (i ==  visitedNationalParksIndicesOrder.size() - 1 ? "" : " -> ");
             };
 
             return output;
@@ -290,38 +350,39 @@ class ConservationNetworkGraph {
         };
 
         /*
-            shortestPathToString
+        shortestPathToString
 
-            Returns a string representing the shortest path from one park to another
+        Returns a string representing the shortest path from one park to another
 
-            Parameters:
-            from - a constant reference to an index of the starting park within the adjacency list
-            to - a constant reference to an index of the destination park within the adjacency list
+        Uses Dijkstra's algorithm
 
-            e.g:
-                std::string shortestPath = 
+        Parameters:
+        from - index of the starting park in the adjacency list
+        to - index of the destination park in the adjacency list
 
-            working on it:
+        e.g:
+            std::string shortestPath = 
 
-            Shortest route from Kruger to Hwange
+        working on it:
 
-            Kruger → Limpopo → Chobe → Hwange
+        Shortest route from Kruger to Hwange
 
-            Total distance: 410 km
+        Kruger → Limpopo → Chobe → Hwange
 
+        Total distance: 410 km
         */
         std::string shortestPathToString(
             const unsigned int& from,
             const unsigned int& to
         ) {
 
-            if (from >= adjList.size()) {
-                std::string errorMsg = "from index '" + std::to_string(from) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
+            if (from >= nationalParks.size()) {
+                std::string errorMsg = "from index '" + std::to_string(from) + "' is not from 0 to '" + std::to_string(nationalParks.size() - 1) + "' (inclusive)";
                 return errorMsg;
             };
 
-            if (to >= adjList.size()) {
-                std::string errorMsg = "to index '" + std::to_string(to) + "' is not from 0 to '" + std::to_string(adjList.size() - 1) + "' (inclusive)";
+            if (to >= nationalParks.size()) {
+                std::string errorMsg = "to index '" + std::to_string(to) + "' is not from 0 to '" + std::to_string(nationalParks.size() - 1) + "' (inclusive)";
                 return errorMsg;
             };
 
@@ -329,55 +390,55 @@ class ConservationNetworkGraph {
             const unsigned int& NULL_PREV = UINT_MAX;
 
             std::vector<unsigned int> queue;
-            queue.reserve(adjList.size());
+            queue.reserve(nationalParks.size());
 
-            unsigned int dist[adjList.size()] = {};
-            unsigned int prev[adjList.size()] = {};
+            unsigned int dist[nationalParks.size()] = {};
+            unsigned int prev[nationalParks.size()] = {};
 
-            for (unsigned int i = 0; i < adjList.size(); ++i) {
-                const unsigned int& currentNodeIndex = i;
-                dist[currentNodeIndex] = INF;
-                prev[currentNodeIndex] = NULL_PREV;
-                queue.push_back(currentNodeIndex);
+            for (unsigned int i = 0; i < nationalParks.size(); ++i) {
+                const unsigned int& currentNationalParkIndex = i;
+                dist[currentNationalParkIndex] = INF;
+                prev[currentNationalParkIndex] = NULL_PREV;
+                queue.push_back(currentNationalParkIndex);
             };
 
             dist[from] = 0;
 
             while (!queue.empty()) {
-                unsigned int closestNodeIndex = queue.front();
+                unsigned int closestNationalParkIndex = queue.front();
                 for (unsigned int i = 0; i < queue.size(); ++i) {
-                    const unsigned int& currentNodeIndex = queue.at(i);
-                    const unsigned int& currentDistance = dist[currentNodeIndex];
-                    if (dist[currentNodeIndex] < dist[closestNodeIndex]) {
-                        closestNodeIndex = currentNodeIndex;
+                    const unsigned int& currentNationalParkIndex = queue.at(i);
+                    const unsigned int& currentDistance = dist[currentNationalParkIndex];
+                    if (dist[currentNationalParkIndex] < dist[closestNationalParkIndex]) {
+                        closestNationalParkIndex = currentNationalParkIndex;
                     };
                 };
 
-                auto it = std::find(queue.begin(), queue.end(), closestNodeIndex);
+                auto it = std::find(queue.begin(), queue.end(), closestNationalParkIndex);
 
                 if (it != queue.end()) {
                     queue.erase(it);
                 };
 
-                const Node& closestNode = adjList.at(closestNodeIndex);
-                const Edges& edges = closestNode.edges;
+                const NationalPark& closestNationalPark = nationalParks.at(closestNationalParkIndex);
+                const WildfLifeCorridors& wildfLifeCorridors = closestNationalPark.wildfLifeCorridors;
 
-                for (unsigned int i = 0; i < edges.size(); ++i) {
-                    const unsigned int& currentEdgeIndex = i;
-                    const Edge& currentEdge = edges.at(currentEdgeIndex);
-                    const unsigned int& currentNeighborIndex = currentEdge.to;
-                    const unsigned int& distanceFromCurrentNodeToNeighbor = currentEdge.weight;
-                    const unsigned int alternativeDistanceFromCurrentNodeToNeighbor = dist[closestNodeIndex] + distanceFromCurrentNodeToNeighbor;
-                    if (alternativeDistanceFromCurrentNodeToNeighbor < dist[currentNeighborIndex]) {
-                        dist[currentNeighborIndex] = alternativeDistanceFromCurrentNodeToNeighbor;
-                        prev[currentNeighborIndex] = closestNodeIndex;
+                for (unsigned int i = 0; i < wildfLifeCorridors.size(); ++i) {
+                    const unsigned int& currentWildfLifeCorridorIndex = i;
+                    const WildfLifeCorridor& currentWildfLifeCorridor = wildfLifeCorridors.at(currentWildfLifeCorridorIndex);
+                    const unsigned int& currentNeighborIndex = currentWildfLifeCorridor.to;
+                    const unsigned int& distanceFromCurrentNationalParkToNeighbor = currentWildfLifeCorridor.weight;
+                    const unsigned int alternativeDistanceFromCurrentNationalParkToNeighbor = dist[closestNationalParkIndex] + distanceFromCurrentNationalParkToNeighbor;
+                    if (alternativeDistanceFromCurrentNationalParkToNeighbor < dist[currentNeighborIndex]) {
+                        dist[currentNeighborIndex] = alternativeDistanceFromCurrentNationalParkToNeighbor;
+                        prev[currentNeighborIndex] = closestNationalParkIndex;
                     };
                 };
 
             };
 
             std::vector<unsigned int> path = {};
-            path.reserve(adjList.size());
+            path.reserve(nationalParks.size());
 
             unsigned int current = to;
 
@@ -391,16 +452,16 @@ class ConservationNetworkGraph {
 
             std::string output = "";
 
-            const Node& fromNode = adjList.at(from);
-            const Node& toNode = adjList.at(to);
+            const NationalPark& fromNationalPark = nationalParks.at(from);
+            const NationalPark& toNationalPark = nationalParks.at(to);
 
-            output += "shortest route from " + fromNode.name + " to " + toNode.name + "\n\n";
+            output += "shortest route from " + fromNationalPark.name + " to " + toNationalPark.name + "\n\n";
 
             for (unsigned int i = path.size() - 1; i < path.size(); --i) {
-                const unsigned int& currentNodeIndex = path.at(i);
-                const Node& currentNode = adjList.at(currentNodeIndex);
-                const std::string& currentNodeName = currentNode.name;
-                output += currentNodeName + (i == 0 ? "" : " -> ");
+                const unsigned int& currentNationalParkIndex = path.at(i);
+                const NationalPark& currentNationalPark = nationalParks.at(currentNationalParkIndex);
+                const std::string& currentNationalParkName = currentNationalPark.name;
+                output += currentNationalParkName + (i == 0 ? "" : " -> ");
             };
 
             output += "\n\n" + std::string("Total distance: ") + std::to_string(dist[to]) + "km";
@@ -411,8 +472,34 @@ class ConservationNetworkGraph {
 
 };
 
+/*
+Main program loop
+
+Repeatedly displays the main menu and waits for user input until
+the user chooses to exit the program.
+
+Each iteration:
+    1. Clears the screen and displays the available menu options
+    2. Displays the current program status message
+    3. Receives and validates the user's menu selection
+    4. Executes the corresponding operation using a switch statement
+
+Available operations:
+    1. Display the conservation network and all wildlife corridors
+    2. Display the conservation network as an adjacency matrix
+    3. Perform a breadth-first search (BFS) traversal from a selected park
+    4. Find the shortest route between two parks using Dijkstra's algorithm
+    5. Exit the program
+
+The loop continues while the running flag remains true.
+Selecting option 5 changes running to false, causing the program to terminate.
+*/
 int main() {
 
+    /*
+    Intialise conservationNetworkGraph to have all of the national parks
+    and wildlife corridors
+    */
     ConservationNetworkGraph conservationNetworkGraph({
         /*
         Kruger National Park
@@ -421,7 +508,7 @@ int main() {
         {
             .name = "Kruger",
             .shortName = "KR",
-            .edges = {
+            .wildfLifeCorridors = {
                 /*
                 Kruger -> Limpopo
                 0 -> 1
@@ -440,14 +527,13 @@ int main() {
             }
         },
         /*
-        Complete
         Limpopo National Park
         Index = 1
         */
         {
             .name = "Limpopo",
             .shortName = "LI",
-            .edges = {
+            .wildfLifeCorridors = {
                 /*
                 Limpopo -> Kruger
                 1 -> 0
@@ -467,7 +553,7 @@ int main() {
         {
             .name = "Hwange",
             .shortName = "HW",
-            .edges = {
+            .wildfLifeCorridors = {
                 /*
                 Hwange -> Kruger
                 2 -> 0
@@ -491,14 +577,13 @@ int main() {
             }
         },
         /*
-        complete
         Chobe National Park
         Index = 3
         */
         {
             .name = "Chobe",
             .shortName = "CH",
-            .edges = {
+            .wildfLifeCorridors = {
                 /*
                 Chobe -> Hwange
                 3 -> 2
@@ -517,14 +602,13 @@ int main() {
             }
         },
         /*
-        complete
         Etosha National Park
         Index = 4
         */
         {
             .name = "Etosha",
             .shortName = "ET",
-            .edges = {
+            .wildfLifeCorridors = {
                 /*
                 Etosha -> Kgalagadi
                 4 -> 5
@@ -538,14 +622,13 @@ int main() {
             }
         },
         /*
-        complete
         Kgalagadi Transfrontier Park
         Index = 5
         */
         {
             .name = "Kgalagadi",
             .shortName = "KG",
-            .edges = {
+            .wildfLifeCorridors = {
                 /*
                 Kgalagadi -> Kruger
                 5 -> 0
@@ -570,6 +653,7 @@ int main() {
         }
     });
 
+    // Header of every page
     const std::string HEADER = R"(
 Programmer: Rowan Van Zyl, 25939831
 Wildlife Corridor Network System
@@ -577,17 +661,27 @@ Wildlife Corridor Network System
 
 )";
 
+    // Default status message displayed in the menu
     const char DEFAULT_STATUS[] = "Ok";
 
+    // Stores the user's raw input from the keyboard
     std::string input_str = "";
+
+    // Stores the first character of the user's menu selection
     char input_char = ' ';
+
+    // Current status message displayed to the user
+    // (e.g. "Ok" or an error message)
     std::string status = DEFAULT_STATUS;
+
+    // Controls the main program loop
+    // The program continues running while this value is true and exits when false
     bool running  = true;
 
     do {
 
+        // Clears the screen and prints the home menu
         clearScreen();
-
         std::cout
             << HEADER
             << "1. Display conservation network" << std::endl
@@ -600,66 +694,64 @@ Wildlife Corridor Network System
             << std::endl
         ;
 
+        // Resets status after every user enter
         status = DEFAULT_STATUS;
 
+        // Stores home menu user input in input_str
         std::getline(
             std::cin,
             input_str,
             '\n'
         );
 
-        if (input_str.size() >= 2) {
+        // Shows an error message if the input is not only 1 character
+        if (input_str.size() != 1) {
             status = "Error: input must be only 1 character";
             continue;
         };
 
+        // Extract menu selection
         input_char = input_str[0];
 
+        // Show different screens depending on user input
         switch (input_char) {
+            // Displays the entire conservation network to user
             case '1': {
                 clearScreen();
                 std::cout
                     << HEADER
                     << conservationNetworkGraph.toString()
-                    << "Press enter to continue..."
-                    << std::endl
                 ;
-                std::string dummyStr;
-                std::getline(
-                    std::cin,
-                    dummyStr,
-                    '\n'
-                );
+                waitForEnter();
                 break;
             };
+            // Displays the conservation networks adjacency matrix as a table to user
+            // Consists of national parks and their wild life corridors
             case '2': {
                 clearScreen();
                 std::cout
                     << HEADER
-                    << conservationNetworkGraph.adjListToString()
-                    << "Press enter to continue..."
-                    << std::endl
+                    << conservationNetworkGraph.nationalParksToString()
                 ;
-                std::string dummyStr;
-                std::getline(
-                    std::cin,
-                    dummyStr,
-                    '\n'
-                );
+                waitForEnter();
                 break;
             };
+            // Displays a BFS traversal starting from a user inputted starting park index
             case '3': {
+
+                // Clears screen and displays header with 'Parks:' heading
                 clearScreen();
                 std::cout
                     << HEADER
                     << "Parks:" << std::endl
                 ;
 
-                const AdjList& adjList = conservationNetworkGraph.getAdjList();
+                const NationalParks& nationalParks = conservationNetworkGraph.getNationalParks();
 
-                for (unsigned int i = 0; i < adjList.size(); ++i) {
-                    const Node& currentNode = adjList.at(i);
-                    std::cout << i << ": " << currentNode.name << std::endl;
+                // Displays all available national park indices to choose from
+                for (unsigned int i = 0; i < nationalParks.size(); ++i) {
+                    const NationalPark& currentNationalPark = nationalParks.at(i);
+                    std::cout << i << ": " << currentNationalPark.name << std::endl;
                 };
 
                 std::cout
@@ -667,60 +759,56 @@ Wildlife Corridor Network System
                     << "Start location: "
                 ;
 
+                // Stores user start park index input
                 std::string inputStartParkStr = "";
 
+                // Collects input
                 std::getline(
                     std::cin,
                     inputStartParkStr,
                     '\n'
                 );
 
-                unsigned int startParkIndex = 0;
-
-                startParkIndex = inputStartParkStr[0] - '0';
-
-                if (inputStartParkStr.size() != 1 || startParkIndex >= adjList.size()) {
+                if (inputStartParkStr.size() != 1) {
                     std::cout
                         << std::endl
-                        << "Error: input must be one character out of the valid options above" << std::endl
+                        << "Error: input must be only one character" << std::endl
                         << std::endl
-                        << "Press enter to continue..." << std::endl
                     ;
-                    std::string dummyStr;
-                    std::getline(
-                        std::cin,
-                        dummyStr,
-                        '\n'
-                    );
+                    waitForEnter();
                     break;
                 };
 
+                unsigned int startParkIndex = 0;
+
+                // Converts 0-9 asci character to 0-9 unsigned int
+                startParkIndex = inputStartParkStr[0] - '0';
+
+                // Displays BFS traversal or error emssage if starting park index is out of range
                 std::cout
                     << std::endl
                     << conservationNetworkGraph.BFSPathToString(startParkIndex) << std::endl
                     << std::endl
-                    << "Press enter to continue..." << std::endl
                 ;
-                std::string dummyStr;
-                std::getline(
-                    std::cin,
-                    dummyStr,
-                    '\n'
-                );
+                waitForEnter();
                 break;
             };
+            // Displays the shortest path from a user inputted starting park index and a user inputted destination park index
             case '4': {
+
+                // Clears screen and displays header with 'Parks:' heading
                 clearScreen();
                 std::cout
                     << HEADER
                     << "Parks:" << std::endl
                 ;
 
-                const AdjList& adjList = conservationNetworkGraph.getAdjList();
+                const NationalParks& nationalParks = conservationNetworkGraph.getNationalParks();
 
-                for (unsigned int i = 0; i < adjList.size(); ++i) {
-                    const Node& currentNode = adjList.at(i);
-                    std::cout << i << " - " << currentNode.name << std::endl;
+                // Displays all available national park indices to choose from
+                for (unsigned int i = 0; i < nationalParks.size(); ++i) {
+                    const NationalPark& currentNationalPark = nationalParks.at(i);
+                    std::cout << i << " - " << currentNationalPark.name << std::endl;
                 };
 
                 std::cout
@@ -728,31 +816,29 @@ Wildlife Corridor Network System
                     << "Start location: "
                 ;
 
+                // Stores user start park index input
                 std::string inputStartParkStr = "";
 
+                // Collects input
                 std::getline(
                     std::cin,
                     inputStartParkStr,
                     '\n'
                 );
 
+                // inputStartParkStr
+
                 unsigned int startParkIndex = 0;
 
                 startParkIndex = inputStartParkStr[0] - '0';
 
-                if (inputStartParkStr.size() != 1 || startParkIndex >= adjList.size()) {
+                if (inputStartParkStr.size() != 1 || startParkIndex >= nationalParks.size()) {
                     std::cout
                         << std::endl
                         << "Error: input must be one character out of the valid options above" << std::endl
                         << std::endl
-                        << "Press enter to continue..." << std::endl
                     ;
-                    std::string dummyStr;
-                    std::getline(
-                        std::cin,
-                        dummyStr,
-                        '\n'
-                    );
+                    waitForEnter();
                     break;
                 };
 
@@ -772,19 +858,13 @@ Wildlife Corridor Network System
 
                 destinationParkIndex = inputDestinationParkStr[0] - '0';
 
-                if (inputDestinationParkStr.size() != 1 || destinationParkIndex >= adjList.size()) {
+                if (inputDestinationParkStr.size() != 1 || destinationParkIndex >= nationalParks.size()) {
                     std::cout
                         << std::endl
                         << "Error: input must be one character out of the valid options above" << std::endl
                         << std::endl
-                        << "Press enter to continue..." << std::endl
                     ;
-                    std::string dummyStr;
-                    std::getline(
-                        std::cin,
-                        dummyStr,
-                        '\n'
-                    );
+                    waitForEnter();
                     break;
                 };
 
@@ -792,16 +872,11 @@ Wildlife Corridor Network System
                     << std::endl
                     << conservationNetworkGraph.shortestPathToString(startParkIndex, destinationParkIndex) << std::endl
                     << std::endl
-                    << "Press enter to continue..." << std::endl
                 ;
-                std::string dummyStr;
-                std::getline(
-                    std::cin,
-                    dummyStr,
-                    '\n'
-                );
+                waitForEnter();
                 break;
             };
+            // Displays teh shorte
             case '5': {
                 std::cout
                     << std::endl
@@ -821,4 +896,3 @@ Wildlife Corridor Network System
     return 0;
 
 };
-
