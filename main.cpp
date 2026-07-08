@@ -5,6 +5,8 @@ Surname: Van Zyl
 Student Number: 25939831
 Module: COS2611
 Assignment: Assessment 3
+
+Please see my github repo for more info: https://github.com/PastorRowan/COS2611-Unisa-Assessment-3
 */
 
 #include <iostream>
