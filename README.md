@@ -7,7 +7,8 @@
 This C++ application models a conservation network of national parks connected by wildlife corridors. The program represents the network as a weighted graph and provides various analytical tools for exploring the connections between parks.
 
 ### Author Information
-- **Name:** Rowan Van Zyl
+- **Name:** Rowan
+- **Surname:** Van Zyl
 - **Student** Number: 25939831
 - **Module:** COS2611
 - **Assignmnet:** Assessment 3
