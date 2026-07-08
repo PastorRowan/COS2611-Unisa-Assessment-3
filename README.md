@@ -61,12 +61,12 @@ The network currently includes six national parks with their respective wildlife
 
 ### Compilation
 ```
-g++ main.cpp -o main.exe
+g++ 25939831_As3.cpp -o 25939831_As3.exe
 ```
 
 ### Execution
 ```
-main.exe
+25939831_As3.exe
 ```
 
 ### Usage Guide

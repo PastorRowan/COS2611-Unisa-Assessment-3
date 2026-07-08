@@ -1,8 +1,8 @@
 
 @echo off
 
-:: Compile main.cpp to main.exe
-g++ main.cpp -o main.exe
+:: Compile 25939831_As3.cpp to 25939831_As3.exe
+g++ 25939831_As3.cpp -o 25939831_As3.exe
 
-:: Run main.exe
-main.exe
+:: Run 25939831_As3.exe
+25939831_As3.exe

@@ -974,6 +974,10 @@ Wildlife Corridor Network System
 };
 
 /*
+
+AI Tool(s) Used:
+- ChatGPT (OpenAI, GPT-5.5 Instant)
+
 GenAI Prompts Used:
 
 1. "How do I implement an adjacency list with weights in C++ for a graph?"
